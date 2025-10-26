@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telecomm Malaysia Network Analysis Dashboard</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        .kpi-card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .map-container {
+            position: relative;
+            background: linear-gradient(135deg, #1f2937, #374151);
+            border-radius: 0.5rem;
+            min-height: 400px;
+        }
+        .tower-pin {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tower-pin:hover {
+            transform: scale(1.5);
+            filter: brightness(1.2);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <header class="mb-8 flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <!-- Mock Logo Placeholder: Using a simple 'TM' icon -->
+            <div class="w-12 h-12 bg-indigo-600 flex items-center justify-center rounded-full shadow-lg">
+                <span class="text-white text-xl font-extrabold">TM</span>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Telecomm Malaysia Network Analysis Dashboard</h1>
+                <p class="text-gray-500">Q3 2025 Performance Monitoring across key Malaysian regions.</p>
+            </div>
+        </div>
+        <div class="text-sm font-semibold text-gray-600 hidden sm:block">
+            Powered by Network Ops
+        </div>
+    </header>
+
+    <!-- Overall KPI Cards -->
+    <section id="kpi-summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10"></section>
+
+    <!-- Main Content: Tower Performance and Map -->
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Tower Performance Table (2/3 width on large screens) -->
+        <div class="lg:col-span-2 bg-white p-6 rounded-xl kpi-card">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Cell Tower Performance Overview</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tower ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uptime</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Latency (ms)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CDR (%)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State/City</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tower-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Tower rows will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Regional Map (1/3 width on large screens) -->
+        <div class="lg:col-span-1 bg-white p-6 rounded-xl kpi-card">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Regional Health Map</h2>
+            <div id="regional-map" class="map-container flex items-center justify-center p-4">
+                <!-- Simple Map Placeholder (replace with actual map library integration in a real project) -->
+                <p class="text-white text-lg font-bold">Mock Klang Valley Coverage Map</p>
+                <p class="text-gray-400 text-sm absolute bottom-4">Click pins for details (See console).</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- New Analytics & Action Section -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+
+        <!-- Root Cause Analysis (Left Column) -->
+        <div class="bg-white p-6 rounded-xl kpi-card">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Top 5 Root Causes of RAN KPI Degradation</h2>
+            <div id="root-cause-list">
+                <!-- Root causes inserted here -->
+            </div>
+        </div>
+
+        <!-- Key Recommendations (Right Column) -->
+        <div class="bg-white p-6 rounded-xl kpi-card">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Key Operational Recommendations</h2>
+            <div id="recommendations-content" class="space-y-4 text-gray-700">
+                <!-- Static recommendations inserted here -->
+            </div>
+        </div>
+
+    </section>
+
+    <div id="detail-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+            <h3 id="modal-title" class="text-lg font-bold mb-4">Tower Details</h3>
+            <div id="modal-content" class="text-sm"></div>
+            <button onclick="document.getElementById('detail-modal').classList.add('hidden')" class="mt-4 w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Sample Data Structure (Localized for Malaysia) ---
+
+        const networkData = {
+            overallKpis: [
+                {
+                    title: "Overall Uptime (Core)",
+                    value: "99.98%",
+                    target: "≥99.95%",
+                    color: "bg-green-500",
+                    icon: "✅"
+                },
+                {
+                    title: "Avg 5G Speed (DL)",
+                    value: "1.2 Gbps",
+                    target: "1.0 Gbps",
+                    color: "bg-blue-500",
+                    icon: "🚀"
+                },
+                {
+                    title: "Call Drop Rate (CDR)",
+                    value: "0.15%",
+                    target: "≤0.20%",
+                    color: "bg-yellow-500",
+                    icon: "📉"
+                },
+                {
+                    title: "Customer Satisfaction (CSAT)",
+                    value: "8.7/10",
+                    target: "≥8.5/10",
+                    color: "bg-purple-500",
+                    icon: "⭐"
+                },
+            ],
+            towerPerformance: [
+                // Tower data localized to Malaysian states/cities
+                { id: "T-001", name: "Batu Ferringhi Tower", status: "Optimal", region: "Penang", uptime: 99.99, latency: 20, cdr: 0.05, loc: { x: 80, y: 150 } },
+                { id: "T-002", name: "KLCC Exchange Hub", status: "Degraded", region: "Kuala Lumpur", uptime: 99.85, latency: 65, cdr: 0.35, loc: { x: 300, y: 50 } },
+                { id: "T-003", name: "Iskandar Puteri Site", status: "Optimal", region: "Johor", uptime: 99.95, latency: 30, cdr: 0.12, loc: { x: 120, y: 350 } },
+                { id: "T-004", name: "Petaling Jaya Industrial Site", status: "Critical", region: "Selangor", uptime: 99.50, latency: 95, cdr: 0.80, loc: { x: 380, y: 280 } },
+                { id: "T-005", name: "Bukit Bintang Link", status: "Optimal", region: "Kuala Lumpur", uptime: 99.99, latency: 25, cdr: 0.08, loc: { x: 250, y: 200 } },
+            ],
+            topDegradationCauses: [
+                { cause: "Fiber Backhaul Cut", count: 18, severity: "High" },
+                { cause: "Power Interruption (Utility)", count: 12, severity: "High" },
+                { cause: "High Traffic Congestion", count: 9, severity: "Medium" },
+                { cause: "Antenna Alignment Drift", count: 6, severity: "Medium" },
+                { cause: "Software Bug (RAN Node)", count: 5, severity: "Low" }
+            ]
+        };
+
+        // --- Utility Functions ---
+
+        function getStatusColorClass(status) {
+            switch (status) {
+                case 'Optimal':
+                    return 'bg-green-500 text-white';
+                case 'Degraded':
+                    return 'bg-yellow-500 text-gray-900';
+                case 'Critical':
+                    return 'bg-red-600 text-white';
+                default:
+                    return 'bg-gray-400 text-white';
+            }
+        }
+
+        function getStatusDotColor(status) {
+            switch (status) {
+                case 'Optimal': return 'bg-green-500';
+                case 'Degraded': return 'bg-yellow-500';
+                case 'Critical': return 'bg-red-600';
+                default: return 'bg-gray-400';
+            }
+        }
+
+        function showTowerDetails(tower) {
+            const modal = document.getElementById('detail-modal');
+            document.getElementById('modal-title').textContent = `${tower.name} (${tower.id})`;
+            document.getElementById('modal-content').innerHTML = `
+                <p><strong>Status:</strong> <span class="${getStatusColorClass(tower.status)} px-2 py-0.5 rounded-full text-xs">${tower.status}</span></p>
+                <p class="mt-2"><strong>State/City:</strong> ${tower.region}</p>
+                <p><strong>Uptime:</strong> ${tower.uptime.toFixed(2)}%</p>
+                <p><strong>Latency:</strong> ${tower.latency}ms</p>
+                <p><strong>CDR:</strong> ${tower.cdr.toFixed(2)}%</p>
+                <p><strong>Mock Location:</strong> (${tower.loc.x}, ${tower.loc.y})</p>
+                <p class="mt-3 text-red-500 font-medium">Action: Investigate high CDR/Latency immediately in ${tower.region}.</p>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        // --- Render Functions ---
+
+        function renderKpiSummary() {
+            const container = document.getElementById('kpi-summary');
+            container.innerHTML = networkData.overallKpis.map(kpi => `
+                <div class="kpi-card bg-white p-5 rounded-xl flex items-start space-x-4">
+                    <div class="p-3 rounded-full ${kpi.color} text-white text-xl">
+                        ${kpi.icon}
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">${kpi.title}</p>
+                        <p class="text-2xl font-bold text-gray-900">${kpi.value}</p>
+                        <p class="text-xs text-gray-400">Target: ${kpi.target}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTowerTable() {
+            const tbody = document.getElementById('tower-table-body');
+            tbody.innerHTML = networkData.towerPerformance.map(tower => `
+                <tr class="hover:bg-gray-100 cursor-pointer" onclick="showTowerDetails(${JSON.stringify(tower).replace(/"/g, '&quot;')})">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${tower.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="status-dot ${getStatusDotColor(tower.status)}"></span>
+                        <span class="${getStatusColorClass(tower.status)} px-2 py-0.5 rounded-full text-xs font-semibold">${tower.status}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tower.uptime.toFixed(2)}%</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tower.latency}ms</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tower.cdr.toFixed(2)}%</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tower.region}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderRegionalMap() {
+            const mapContainer = document.getElementById('regional-map');
+            // Clear existing map elements
+            mapContainer.innerHTML = '';
+
+            // Add map title and instruction
+            mapContainer.innerHTML += `
+                <div class="absolute top-4 left-4 text-white font-bold text-lg">Klang Valley Coverage Map</div>
+                <p class="text-gray-400 text-sm absolute bottom-4">Click pins for details (See console).</p>
+            `;
+
+            // Add pins based on mock x, y coordinates
+            networkData.towerPerformance.forEach(tower => {
+                const pin = document.createElement('div');
+                pin.classList.add('tower-pin');
+                pin.style.left = `${tower.loc.x}px`;
+                pin.style.top = `${tower.loc.y}px`;
+
+                const dotColor = getStatusDotColor(tower.status).replace('bg-', 'border-');
+                pin.innerHTML = `
+                    <div class="w-4 h-4 rounded-full ${getStatusDotColor(tower.status)} shadow-lg border-2 border-white animate-pulse"></div>
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full ${dotColor} opacity-50 z-0"></div>
+                `;
+
+                pin.onclick = (e) => {
+                    e.stopPropagation(); // Prevent map-level click handlers
+                    console.log("Tower clicked:", tower);
+                    showTowerDetails(tower);
+                };
+                mapContainer.appendChild(pin);
+            });
+        }
+
+        function renderRootCauses() {
+            const container = document.getElementById('root-cause-list');
+            const causes = networkData.topDegradationCauses;
+            const totalCount = causes.reduce((sum, cause) => sum + cause.count, 0);
+
+            container.innerHTML = causes.map(cause => {
+                const percentage = ((cause.count / totalCount) * 100).toFixed(1);
+                let barColor = 'bg-blue-500';
+                let textColor = 'text-blue-500';
+
+                if (cause.severity === 'High') {
+                    barColor = 'bg-red-500';
+                    textColor = 'text-red-500';
+                } else if (cause.severity === 'Medium') {
+                    barColor = 'bg-yellow-500';
+                    textColor = 'text-yellow-500';
+                }
+
+                return `
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm font-medium text-gray-700 mb-1">
+                            <span>${cause.cause} (${cause.count} Incidents)</span>
+                            <span class="font-bold">${percentage}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="h-2.5 rounded-full ${barColor} transition-all duration-500 ease-out" style="width: ${percentage}%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Severity: <span class="font-semibold ${textColor}">${cause.severity}</span></p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderRecommendations() {
+            const container = document.getElementById('recommendations-content');
+            container.innerHTML = `
+                <div class="p-3 border-l-4 border-red-500 bg-red-50 rounded-md">
+                    <p class="font-semibold text-red-700">Immediate Action Required:</p>
+                    <p class="text-sm">Dispatch field teams to **T-004 (Petaling Jaya)** immediately to restore critical services (Uptime 99.50%, CDR 0.80%).</p>
+                </div>
+                <div class="p-3 border-l-4 border-indigo-500 bg-indigo-50 rounded-md">
+                    <p class="font-semibold text-indigo-700">Infrastructure Focus:</p>
+                    <p class="text-sm">Initiate project to harden fiber routes and review power backup solutions to counter the top two degradation causes (Fiber Cut, Power Interruption).</p>
+                </div>
+                <div class="p-3 border-l-4 border-blue-500 bg-blue-50 rounded-md">
+                    <p class="font-semibold text-blue-700">Optimization & Capacity:</p>
+                    <p class="text-sm">Schedule capacity upgrade for **KLCC Exchange Hub (T-002)**. Current latency and CDR indicate high congestion during peak hours.</p>
+                </div>
+                <div class="p-3 border-l-4 border-green-500 bg-green-50 rounded-md">
+                    <p class="font-semibold text-green-700">Proactive Maintenance:</p>
+                    <p class="text-sm">Launch a regional sweep program for antenna physical inspection to correct 'Antenna Alignment Drift' before it causes critical failures.</p>
+                </div>
+            `;
+        }
+
+        // --- Initialization ---
+
+        window.onload = function() {
+            console.log("Dashboard loaded with localized Malaysian data, root causes, and recommendations.");
+            renderKpiSummary();
+            renderTowerTable();
+            renderRegionalMap();
+            renderRootCauses();
+            renderRecommendations();
+        };
+    </script>
+</body>
+</html>
